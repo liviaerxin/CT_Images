@@ -1,0 +1,4 @@
+python_box==4.0.4
+pydicom==1.4.1
+Pillow==7.0.0
+PySimpleGUI==4.15.2
