@@ -12,9 +12,23 @@
 
 2. render `DicomFolder` as tree view
 
-   This version is using PySimpleGUI - tkinter to show tree view.
+   This version is using PySimpleGUI-tkinter port to show tree view.
 
-   PySimpleGUI - tkinter version:  
+   **Note:** In Mac, the Apple-supplied Tcl/Tk 8.5 has serious bugs, so try to cirvumvent the Apple-supplied Pythons. Instead, install and use a newer versions of Pythons.
+   To check which Tck/Tk version is,
+
+   ```sh
+   python -m tkinter -c 'tkinter._test()'
+   ```
+
+   **Reference:**
+   Tcl/Tk:
+   [IDLE and tkinter with Tcl/Tk on macOS](https://www.python.org/download/mac/tcltk/)  
+   [Tcl/Tk Binary installers](http://tcl.tk/software/tcltk/bindist.html)  
+   [Install python by pyenv w/ tcl/tk on MacOS 10.14.6 (Mojave)](https://medium.com/@azuryn/install-python-by-pyenv-w-tcl-tk-on-macos-10-14-6-mojave-14fde5351f53)  
+   [PyEnv Python installation steps to get the latest tcl/tk version on Mac OS 10.14.6 (Mojave)](https://github.com/pyenv/pyenv/issues/1375#issuecomment-524280004)  
+
+   PySimpleGUI-tkinter port:  
    [PySimpleGUI](https://github.com/PySimpleGUI/PySimpleGUI)  
    [Tree Element](https://github.com/PySimpleGUI/PySimpleGUI#tree-element)
 
@@ -37,7 +51,7 @@
 
 ## Usage
 
-Requirement: Python 3.6+, `pipenv`
+Requirement: Python 3.7+, `pipenv`
 
 ```sh
 pipenv run ./app.py
@@ -64,14 +78,16 @@ If the series also contains a localizer image, this image would have to be exclu
 
 ## TODO
 
-- `DicomFolder` only have children while `DicomDir` has `patient_records`
-- Do not show instances in tree  
+- [x] `DicomFolder` only have children while `DicomDir` has `patient_records`
+  rename `children` by `patient_records` in `DicomFolder`
+- [x] Do not show instances in tree and insert a complete `Series` data into the node for retriving obviously and fast
   see comments in `Run` event  
   our business logic should be seperated from UI data structure  
   (meaning that our own data structure should support our business logic's need)
-- trigger "Scan" after (a different) folder is selected  
-  no need to use "Scan" button  
-  with `enable_events=True`?  
-  idealy selecting the same folder should not trigger "Scan"
-- double click on tree to trigger "View"  
+
+- [x] remove `Scan` button, automatically doing `Scan` job after `Browse` a folder
+  do `enable_events=True` in `InputText`
+  idealy selecting the same folder should not trigger "Scan"? But maybe the same folder will add or delete files, which means `Scan` job is needed.
+  
+- [x] double click on tree to trigger "View"  
   this is better than right click menu, which is quite buggy and non-standard

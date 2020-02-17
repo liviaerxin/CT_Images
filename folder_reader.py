@@ -118,18 +118,18 @@ class DicomFolder(dict):
     def __init__(self):
         super().__init__()
         self.__dict__ = self
-        self.children = []
+        self.patient_records = []
 
-    def add_child(self, patient):
-        self.children.append(patient)
+    def add_patient_record(self, patient):
+        self.patient_records.append(patient)
 
-    def sort_children(self):
+    def sort_patient_records(self):
         pass
 
-    def get_child(self, PatientID):
-        for patient in self.children:
-            if patient == PatientID:
-                return patient
+    def get_patient_record(self, PatientID):
+        for patient_record in self.patient_records:
+            if patient_record == PatientID:
+                return patient_record
         return None
 
     def add_instance(self, instance):
@@ -189,7 +189,7 @@ def read_dicomfolder(foldername):
                 PatientID = ds.PatientID if hasattr(ds, "PatientID") else "Anonymous"
                 PatientName = ds.PatientName if hasattr(ds, "PatientName") else None
 
-                # Insert into dicomdir
+                # Insert into dicomfolder
                 instance = Instance(
                     dcmname,
                     SOPInstanceUID,
@@ -197,7 +197,7 @@ def read_dicomfolder(foldername):
                     ImagePosition,
                     ImageOrientation,
                 )
-                patient = dicomfolder.get_child(PatientID)
+                patient = dicomfolder.get_patient_record(PatientID)
                 if patient is None:
                     # print(patient)
                     series = Series(
@@ -207,7 +207,7 @@ def read_dicomfolder(foldername):
                         StudyInstanceUID, StudyID, StudyDate, StudyDescription
                     )
                     patient = Patient(PatientID, PatientName)
-                    dicomfolder.add_child(patient)
+                    dicomfolder.add_patient_record(patient)
                     patient.add_child(study)
                     study.add_child(series)
                     series.add_child(instance)
@@ -252,7 +252,7 @@ if __name__ == "__main__":
     print(dicomdir)
 
     # read DICOMDIR
-    for patient in dicomdir.children:
+    for patient in dicomdir.patient_records:
         patient_id = patient.PatientID
         patient_name = patient.PatientName
         print(f"")
