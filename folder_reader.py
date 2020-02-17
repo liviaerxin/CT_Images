@@ -248,7 +248,7 @@ def read_dicomfolder(foldername):
 
 if __name__ == "__main__":
     dicom_dir = "./Chest_CT_selected/"
-    dicomdir = create_simple_DICOMDIR(dicom_dir)
+    dicomdir = read_dicomfolder(dicom_dir)
     print(dicomdir)
 
     # read DICOMDIR
