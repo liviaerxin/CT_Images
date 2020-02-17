@@ -107,19 +107,19 @@ while True:
     if event in (None, "Quit"):  # quit app
         break
 
-    if event == "_SOURCE_FOLDER_":  # choose dicom folder to scan
+    if event == "_SOURCE_FOLDER_":  # Scan: choose dicom folder to scan
         if not values["_SOURCE_FOLDER_"]:
             sg.Popup("Error", f"please select a folder to scan!")
             continue
 
         # clear old data
         # del treedata
-
+        # do `Scan` job
         dicomfolder = read_dicomfolder(values["_SOURCE_FOLDER_"])
         treedata = dicomfolder_to_treedata(dicomfolder)
         window["_TREE_"].update(values=treedata)
 
-    elif event in ("View", "_TREE_+DOUBLE_CLICK+"): # choose one series to view
+    elif event in ("View", "_TREE_+DOUBLE_CLICK+"): # View: choose one series to view
         if len(values["_TREE_"]) < 1:
             sg.Popup("Error", f"please choose a series to view!")
             continue

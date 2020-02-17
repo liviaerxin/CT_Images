@@ -21,7 +21,7 @@
    python -m tkinter -c 'tkinter._test()'
    ```
 
-   **Reference:**
+   **Reference:**  
    Tcl/Tk:
    [IDLE and tkinter with Tcl/Tk on macOS](https://www.python.org/download/mac/tcltk/)  
    [Tcl/Tk Binary installers](http://tcl.tk/software/tcltk/bindist.html)  
@@ -80,6 +80,7 @@ If the series also contains a localizer image, this image would have to be exclu
 
 - [x] `DicomFolder` only have children while `DicomDir` has `patient_records`
   rename `children` by `patient_records` in `DicomFolder`
+
 - [x] Do not show instances in tree and insert a complete `Series` data into the node for retriving obviously and fast
   see comments in `Run` event  
   our business logic should be seperated from UI data structure  
@@ -88,6 +89,9 @@ If the series also contains a localizer image, this image would have to be exclu
 - [x] remove `Scan` button, automatically doing `Scan` job after `Browse` a folder
   do `enable_events=True` in `InputText`
   idealy selecting the same folder should not trigger "Scan"? But maybe the same folder will add or delete files, which means `Scan` job is needed.
-  
+
 - [x] double click on tree to trigger "View"  
   this is better than right click menu, which is quite buggy and non-standard
+
+- add progressing when doing `Scan` job  
+- mock running a background algorithm worker after triggering `View`  
