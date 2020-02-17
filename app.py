@@ -3,24 +3,20 @@ import sys
 import os
 import PySimpleGUI as sg
 
-from create_simple_DICOMDIR import create_simple_DICOMDIR
+from folder_reader import read_dicomfolder
 
 
 treedata = sg.TreeData()
 
-def add_DICOMDIR_to_tree(dicomdir):
-    print("add_DICOMDIR_to_tree")
 
+def dicomfolder_to_treedata(dicomfolder, treedata):
     treedata.Insert("", "patient", "patient", [])
 
-    for patient in dicomdir.children:
+    for patient in dicomfolder.children:
         patient_id = patient.PatientID
         patient_name = patient.PatientName
         treedata.Insert(
-            "patient",
-            patient_id,
-            patient_id,
-            [],
+            "patient", patient_id, patient_id, [],
         )
 
         treedata.Insert(patient_id, "study", "study", [])
@@ -39,30 +35,26 @@ def add_DICOMDIR_to_tree(dicomdir):
                 modality = series.Modality
                 series_number = series.SeriesNumber
                 series_description = series.SeriesDescription
-                treedata.Insert(
-                    "series", series_uid, series_uid, []
-                )
+                series_text = f"{series_uid} ({len(series.children)} instances)"
+                treedata.Insert("series", series_uid, series_text, [1, 2, 3])
 
-                #treedata.Insert(series_uid, "instance", "instance", [])
-
+                # TODO: no need to to show instances
                 for instance in series.children:
                     filepath = instance.filepath
                     instance_uid = instance.SOPInstanceUID
                     instance_number = instance.InstanceNumber
                     image_position = instance.ImagePosition
                     image_orientation = instance.ImageOrientation
-                    treedata.Insert(
-                        series_uid, instance_uid, instance_uid, [filepath]
-                    )
+                    treedata.Insert(series_uid, instance_uid, instance_uid, [filepath])
 
-right_click_menu = ['that', ['Run', 'there', 'those']]
+
+right_click_menu = ["that", ["View", "there", "those"]]
 
 layout = [
     # Source Folder
-[sg.T('Source Folder')],
-              [sg.In(key='source_folder')],
-              [sg.FolderBrowse(target='source_folder'), sg.Button("Organize")],
-
+    [sg.T("Source Folder")],
+    [sg.In(key="source_folder")],
+    [sg.FolderBrowse(target="source_folder"), sg.Button("Scan")],
     # Tree View
     [sg.Text("Tree View")],
     [
@@ -77,10 +69,11 @@ layout = [
             key="_TREE_",
             show_expanded=False,
             enable_events=True,
+            right_click_menu=right_click_menu,
         ),
     ],
-    [sg.Button("Run")],
-    [sg.Button("Ok"), sg.Button("Cancel")],
+    [sg.Button("View")],
+    # [sg.Button("Ok"), sg.Button("Cancel")],
 ]
 
 window = sg.Window("Tree Element Test", layout, size=(1000, 800))
@@ -88,38 +81,45 @@ window = sg.Window("Tree Element Test", layout, size=(1000, 800))
 # Event Loop
 while True:
     event, values = window.read()
-    
-    if event in (None, "Cancel"):
+
+    if event == None:  # quit app
         break
-    
-    print(event, values)
-    
-    if event == "Organize":
+
+    print(">", event, values)
+
+    if event == "Scan":
+        if not values["source_folder"]:
+            sg.Popup("Error", f"please select a folder to scan!")
+            continue
+
+        # clear old data
         del treedata
         treedata = sg.TreeData()
-        source_folder = values["source_folder"]
-        dicomdir = create_simple_DICOMDIR(source_folder)
-        add_DICOMDIR_to_tree(dicomdir)
-        print(window.Element("_TREE_").Update(values=treedata))
 
+        dicomfolder = read_dicomfolder(values["source_folder"])
+        dicomfolder_to_treedata(dicomfolder, treedata)
+        window.Element("_TREE_").Update(values=treedata)
 
-    if event == "Run":
+    if event == "View":
         if len(values["_TREE_"]) < 1:
-            sg.Popup("Message", f"please choose a series to run!")
+            sg.Popup("Error", f"please choose a series to view!")
             continue
+
         key = values["_TREE_"][0]
         node = treedata.tree_dict[key]
         print(dir(node))
         if node.parent == "series":
-            print(f"run series {node.key} of total {len(node.children)} instances")
+            # TODO: we should not rely on `treedata`'s data to business logic
+            # we do need a reference to the series in `dicomfolder`
+            # possibly via UID lookup? or can be add user data to `node`
+            print(f"view series {node.key} of total {len(node.children)} instances")
             vals = []
             for instance in node.children:
                 print(instance.values)
                 vals.append(instance.values)
             sg.Popup(event, vals)
         else:
-            print(f"please choose a series to run!")
-            sg.Popup("Message", f"please choose a series to run!")
+            sg.Popup("Error", f"please choose a series to view!")
         pass
 
 window.close()
