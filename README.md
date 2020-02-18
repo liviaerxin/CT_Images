@@ -78,33 +78,36 @@ If the series also contains a localizer image, this image would have to be exclu
 
 ## TODO
 
-- [x] `DicomFolder` only have children while `DicomDir` has `patient_records`
-  rename `children` by `patient_records` in `DicomFolder`
+- [x] `DicomFolder` only have children while `DicomDir` has `patient_records`  
+  rename `children` by `patient_records` in `DicomFolder`  
 
-- [x] Do not show instances in tree and insert a complete `Series` data into the node for retriving obviously and fast
+- [x] Do not show instances in tree and insert a complete `Series` data into the node for retriving obviously and fast  
   see comments in `Run` event  
   our business logic should be seperated from UI data structure  
-  (meaning that our own data structure should support our business logic's need)
+  (meaning that our own data structure should support our business logic's need)  
 
-- [x] remove `Browse` button, automatically doing `Scan` job after `Scan` button to open a folder
-  do `enable_events=True` in `InputText`
-  idealy selecting the same folder should not trigger "Scan"? But maybe the same folder will add or delete files, which means `Scan` job is needed.
+- [x] remove `Browse` button, automatically doing `Scan` job after `Scan` button to open a folder  
+  do `enable_events=True` in `InputText`  
+  idealy selecting the same folder should not trigger "Scan"? But maybe the same folder will add or delete files, which means `Scan` job is needed.  
 
 - [x] double click on tree to trigger "View"  
-  this is better than right click menu, which is quite buggy and non-standard
+  this is better than right click menu, which is quite buggy and non-standard  
 
-- [x] add progressing when doing `Scan` job
-  use `OneLineProgressMeter` element
+- [x] add progressing when doing `Scan` job  
+  use `OneLineProgressMeter` element  
 
-- [x] mock running an algorithm function in main thread after triggering `View`
-  show progress by using `yield`
-  no need to use a background thread to run in this application?
-  because: 1. it has progress bar, 2. inference is always fast(<1s ?) 3. the main thread GUI does not need do other jobs or show other things due to pogress bar already existing.
+- [x] mock running an algorithm function in main thread after triggering `View`  
+  show progress by using `yield`  
+  no need to use a background thread to run in this application?  
+  because:
+    1. it has progress bar
+    2. inference is always fast(<1s)？
+    3. the main thread GUI does not need do other jobs or show other things due to pogress bar already existing
 
-- [x] cast a viewer window(the second window) after running an algorithm
-  only 1 viewer window is visible and available at a time
-  both main window and viewer window are active at the same time
-  change to support only 1 active window? hide the main window after opening viewer window, close the viewer window will show main window?
+- [x] cast a viewer window(the second window) after running an algorithm  
+  only 1 viewer window is visible and available at a time  
+  both main window and viewer window are active at the same time  
+  change to support only 1 active window? hide the main window after opening viewer window, close the viewer window will show main window?  
 
-- add cache for analysis result to avoid running alogrithm for same series
-- decouple the code better
+- add cache for analysis result to avoid running alogrithm for same series  
+- decouple the code better  
