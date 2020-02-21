@@ -5,9 +5,6 @@ from pydicom import dcmread
 
 print(pydicom.__version__)
 
-# dicom_dir = "./siim-medical-images/dicom_dir/"
-# dicom_dir = "./Chest_CT_selected/"
-
 
 class Instance(dict):
     def __init__(
@@ -247,12 +244,13 @@ def read_dicomfolder(foldername):
 
 
 if __name__ == "__main__":
-    dicom_dir = "./Chest_CT_selected/"
-    dicomdir = read_dicomfolder(dicom_dir)
-    print(dicomdir)
+    # dicom_folder = "./siim-medical-images/"
+    dicom_folder = "./Chest_CT_selected/"
+    dicomfolder = read_dicomfolder(dicom_folder)
+    print(dicomfolder)
 
-    # read DICOMDIR
-    for patient in dicomdir.patient_records:
+    # print DicomFolder
+    for patient in dicomfolder.patient_records:
         patient_id = patient.PatientID
         patient_name = patient.PatientName
         print(f"")

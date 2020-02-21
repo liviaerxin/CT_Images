@@ -4,14 +4,14 @@ import os
 import PySimpleGUI as sg
 
 from folder_reader import read_dicomfolder
+from viewer import Viewer
 
 """
-    Both window and window_viewer can be active at the same time:
-    There are three important things to be mentioned about the design pattern:
-        1. The layout for window_viewer must be fresh every time the window_viewer is created
-        2. Both windows must have a read timeout to make themself non-blocking for keeping them active at the `same` time
-        3. There is a safeguard policy to stop from launching multiple copies of window_viewer.  Only 1 window_viewer is visible at a time
-
+Both window and window_viewer can be active at the same time.
+There are three important things to be mentioned about this design pattern:
+1. The layout for window_viewer must be fresh every time the window_viewer is created
+2. Both windows must have a read timeout to make themself non-blocking for keeping them active at the `same` time
+3. There is a safeguard policy to stop from launching multiple copies of window_viewer.  Only 1 window_viewer is visible at a time
 """
 
 
@@ -55,20 +55,8 @@ def dicomfolder_to_treedata(dicomfolder):
                 modality = series.Modality
                 series_number = series.SeriesNumber
                 series_description = series.SeriesDescription
-                series_text = f"{series_uid}"  # f"{series_uid} ({len(series.children)} instances)"
-                all_instances = series.children
-                treedata.Insert(
-                    "series", series_uid, series_text, [len(all_instances), series]
-                )
-
-                # no need to to show instances
-                # for instance in series.children:
-                #     filepath = instance.filepath
-                #     instance_uid = instance.SOPInstanceUID
-                #     instance_number = instance.InstanceNumber
-                #     image_position = instance.ImagePosition
-                #     image_orientation = instance.ImageOrientation
-                #     treedata.Insert(series_uid, instance_uid, instance_uid, [filepath])
+                series_text = f"{series_uid} ({len(series.children)} instances)"
+                treedata.Insert("series", series_uid, series_text, [series])
     return treedata
 
 
@@ -78,8 +66,10 @@ right_click_menu = ["that", ["View", "there", "those"]]
 layout = [
     # Source Folder
     [sg.Text("Source Folder")],
-    [sg.InputText(key="_SOURCE_FOLDER_", enable_events=True)],
-    [sg.FolderBrowse(button_text="Scan", target="_SOURCE_FOLDER_")],
+    [
+        sg.InputText(key="_SOURCE_FOLDER_", enable_events=True),
+        sg.FolderBrowse(button_text="Scan", target="_SOURCE_FOLDER_"),
+    ],
     # Tree View
     [sg.Text("Tree View")],
     [
@@ -97,19 +87,21 @@ layout = [
             justification="center",
             enable_events=True,
             visible=True,
-            # right_click_menu=right_click_menu, # there are bugs in MacOS, using `binding-tkiner-events` instead.
+            # there are bugs in MacOS, use custom binding instead.
+            # right_click_menu=right_click_menu,
         ),
     ],
     [sg.Button("View")],
-    # [sg.Button("Ok"), sg.Button("Cancel")],
 ]
 
-window = sg.Window("Tree Element Test", layout, size=(1000, 800), finalize=True)
+window = sg.Window("DICOM Folder Tree View", layout, size=(1000, 800), finalize=True)
 
 # Custom Binding
 # (tkinter "events"), seeing: https://pysimplegui.readthedocs.io/en/latest/#binding-tkiner-events
-window["_TREE_"].bind("<Double-Button-1>", "+DOUBLE_CLICK+")  # Double Click On Tree Row
+# Double Click On Tree Row
+window["_TREE_"].bind("<Double-Button-1>", "+DOUBLE_CLICK+")
 
+# right click, different for OSX
 if sys.platform == "darwin":
     # Mac OSX
     window["_TREE_"].bind("<Button-2>", "+RIGHT_CLICK+")
@@ -117,15 +109,14 @@ else:
     window["_TREE_"].bind("<Button-3>", "+RIGHT_CLICK+")
 
 
-window_viewer_active = False
-
+window_viewer = None
 
 # Event Loop
 while True:
     # print("reading window")
     event, values = window.read(timeout=100)
     if event != sg.TIMEOUT_KEY:
-        print(">window", event, values)  # debug print
+        print("> window", event, values)  # debug print
 
     if event in (None, "Quit"):  # quit app
         break
@@ -156,10 +147,9 @@ while True:
     elif event in (
         "View",
         "_TREE_+DOUBLE_CLICK+",
-    ):  # View: choose one series to lanch a viewer window
-
-        if window_viewer_active:
-            sg.Popup("Error", f"please close the exsiting viewer window")
+    ):  # View: choose one series to launch a viewer window
+        if window_viewer:
+            sg.Popup("Error", f"please close the existing viewer window")
             continue
 
         if len(values["_TREE_"]) < 1:
@@ -177,17 +167,11 @@ while True:
             # 1. get series data
             # we should not rely on `treedata`'s data to business logic
             # we do add `series` data to `node` and can directly retrive it from the values of `node`, so the data structure is based on our defined `Series`
-            number_instances = node.values[0]
-            series = node.values[1]
-            print(f"view series {node.key} of total {number_instances} instances")
+            series = node.values[0]
+            instances = series.children
+            print(f"view series {node.key} of total {len(instances)} instances")
 
-            # vals = []
-            # for instance in series.children:
-            #     print(instance)
-            #     vals.append(instance)
-            sg.Popup(event, series)
-
-            # TODO: 2. run algorithm if no cached analysis result for the series
+            # TODO: run algorithm if no cached analysis result for the series
             for progress in mock_run_algorithm():  # progress is from 0 to 100
                 sg.OneLineProgressMeter(
                     "Analyzing the series",
@@ -201,72 +185,21 @@ while True:
                 pass
             sg.OneLineProgressMeterCancel("_ANALYZE_METER_")
 
-            # TODO: 3. open a DICOM viewer window
-            # TODO: decouple the code better
-            window_viewer_active = True
-
-            layout_viewer = [
-                [sg.Text("Viewer")],
-                [
-                    sg.Graph(
-                        canvas_size=(400, 400),
-                        graph_bottom_left=(0, 0),
-                        graph_top_right=(400, 400),
-                        background_color="red",
-                        key="graph",
-                    )
-                ],
-                [
-                    sg.T("Change circle color to:"),
-                    sg.Button("Red"),
-                    sg.Button("Blue"),
-                    sg.Button("Move"),
-                ],
-            ]
-
-            window_viewer = sg.Window("Viewer", layout_viewer, finalize=True)
-
-            graph = window_viewer["graph"]
-            circle = graph.DrawCircle(
-                (75, 75), 25, fill_color="black", line_color="white"
-            )
-            point = graph.DrawPoint((75, 75), 10, color="green")
-            oval = graph.DrawOval(
-                (25, 300), (100, 280), fill_color="purple", line_color="purple"
-            )
-            rectangle = graph.DrawRectangle((25, 300), (100, 280), line_color="purple")
-            line = graph.DrawLine((0, 0), (100, 100))
-
+            # open a DICOM viewer window
+            window_viewer = Viewer(series, instances)
         else:
-            sg.Popup("Error", f"please choose a series to view!")
+            # sg.Popup("Error", f"please choose a series to view!")
             continue
     else:
         pass
 
-    # Catch window_viewer `event`
-    if window_viewer_active:
-        # print("reading window_viewer")
-        event, values = window_viewer.read(timeout=100)
+    # handle Viewer's event
+    if window_viewer:
+        ret = window_viewer.event_handler()
 
-        if event != sg.TIMEOUT_KEY:
-            print(">window_viewer ", event, values)  # debug print
-
-        if event in (None, "Exit"):
-            print("Closing window_viewer", event)
-            window_viewer_active = False
-            window_viewer.close()
-
-        if event is "Blue":
-            graph.TKCanvas.itemconfig(circle, fill="Blue")
-        elif event is "Red":
-            graph.TKCanvas.itemconfig(circle, fill="Red")
-        elif event is "Move":
-            graph.MoveFigure(point, 10, 10)
-            graph.MoveFigure(circle, 10, 10)
-            graph.MoveFigure(oval, 10, 10)
-            graph.MoveFigure(rectangle, 10, 10)
-        else:
-            pass
+        if ret is None:
+            # Viewer is closed
+            window_viewer = None
 
 
 window.close()

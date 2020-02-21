@@ -26,7 +26,7 @@
    [IDLE and tkinter with Tcl/Tk on macOS](https://www.python.org/download/mac/tcltk/)  
    [Tcl/Tk Binary installers](http://tcl.tk/software/tcltk/bindist.html)  
    [Install python by pyenv w/ tcl/tk on MacOS 10.14.6 (Mojave)](https://medium.com/@azuryn/install-python-by-pyenv-w-tcl-tk-on-macos-10-14-6-mojave-14fde5351f53)  
-   [PyEnv Python installation steps to get the latest tcl/tk version on Mac OS 10.14.6 (Mojave)](https://github.com/pyenv/pyenv/issues/1375#issuecomment-524280004)  
+   [PyEnv Python installation steps to get the latest tcl/tk version on Mac OS 10.14.6 (Mojave)](https://github.com/pyenv/pyenv/issues/1375#issuecomment-524280004)
 
    PySimpleGUI-tkinter port:  
    [PySimpleGUI](https://github.com/PySimpleGUI/PySimpleGUI)  
@@ -79,35 +79,43 @@ If the series also contains a localizer image, this image would have to be exclu
 ## TODO
 
 - [x] `DicomFolder` only have children while `DicomDir` has `patient_records`  
-  rename `children` by `patient_records` in `DicomFolder`  
+       rename `children` by `patient_records` in `DicomFolder`
 
-- [x] Do not show instances in tree and insert a complete `Series` data into the node for retriving obviously and fast  
-  see comments in `Run` event  
-  our business logic should be seperated from UI data structure  
-  (meaning that our own data structure should support our business logic's need)  
+- [x] Do not show instances in tree
+      see comments in `Run` event  
+       our business logic should be seperated from UI data structure  
+       (meaning that our own data structure should support our business logic's need)  
+       the last param in tree node is user data, we now insert a complete `Series` data to it
 
-- [x] remove `Browse` button, automatically doing `Scan` job after `Scan` button to open a folder  
-  do `enable_events=True` in `InputText`  
-  idealy selecting the same folder should not trigger "Scan"? But maybe the same folder will add or delete files, which means `Scan` job is needed.  
+- [x] remove `Browse` button, automatically doing `Scan` job after `Scan` button to select a folder  
+       with `enable_events=True` in `InputText`  
+       ideally selecting the same folder should not trigger "Scan"?  
+       however the folder might have files added or deleted, which means `Scan` job is needed.
 
 - [x] double click on tree to trigger "View"  
-  this is better than right click menu, which is quite buggy and non-standard  
+       this is better than right click menu, which is quite buggy and non-standard
 
 - [x] add progressing when doing `Scan` job  
-  use `OneLineProgressMeter` element  
+       used `OneLineProgressMeter` element
 
 - [x] mock running an algorithm function in main thread after triggering `View`  
-  show progress by using `yield`  
-  no need to use a background thread to run in this application?  
-  because:
-    1. it has progress bar
-    2. inference is always fast(<1s)？
-    3. the main thread GUI does not need do other jobs or show other things due to pogress bar already existing
+       show progress by using `yield`  
+       no need to use a background thread to run in this application?  
+       because:
 
-- [x] cast a viewer window(the second window) after running an algorithm  
-  only 1 viewer window is visible and available at a time  
-  both main window and viewer window are active at the same time  
-  change to support only 1 active window? hide the main window after opening viewer window, close the viewer window will show main window?  
+       1. it has a progress bar
+       2. inference is always fast(<1s)？
+       3. the main thread GUI does not need do other jobs or show other things due to progress bar already existing
 
-- add cache for analysis result to avoid running alogrithm for same series  
-- decouple the code better  
+- [x] create a viewer window (the second window) after running an algorithm  
+       only 1 viewer window is visible and available at a time  
+       both main window and viewer window are active at the same time  
+       change to support only 1 active window? hide the main window after opening viewer window, close the viewer window will show main window?
+
+- [ ] implement `Viewer`  
+       Use `sg.canvas.TkCanvas(): tk.canvas` to render DICOM pixel data  
+       [Viewing Images — pydicom 1.4.1 documentation](https://pydicom.github.io/pydicom/stable/old/viewing_images.html#using-pydicom-with-tkinter)  
+       [The Tkinter Canvas Widget](https://effbot.org/tkinterbook/canvas.htm)
+
+- [ ] add cache for analysis result to avoid running algorithm for same series
+- [ ] decouple the code better
